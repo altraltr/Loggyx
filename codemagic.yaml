@@ -5,7 +5,7 @@ workflows:
     environment:
       vars:
         XCODE_WORKSPACE: "Loggy.xcworkspace"
-        XCODE_SCHEME: "Loggy"
+        XCODE_SCHEME: "Loggy-Example"
         CONFIGURATION: "Debug"
         DERIVED_DATA_PATH: "$CM_BUILD_DIR/build"
     triggering:
@@ -32,10 +32,8 @@ workflows:
       - name: Build for iOS Simulator
         script: |
           set -e
-          echo pwd
           echo "Derived data: ${DERIVED_DATA_PATH}"
-          cd Example
-          echo pwd
+          xcodebuild -list
           xcodebuild clean -workspace "${XCODE_WORKSPACE}" -scheme "${XCODE_SCHEME}" -configuration "${CONFIGURATION}" -sdk iphonesimulator -derivedDataPath "${DERIVED_DATA_PATH}"
           xcodebuild build -workspace "${XCODE_WORKSPACE}" -scheme "${XCODE_SCHEME}" -configuration "${CONFIGURATION}" -sdk iphonesimulator -derivedDataPath "${DERIVED_DATA_PATH}" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 
