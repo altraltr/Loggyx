@@ -1,0 +1,59 @@
+workflows:
+  build-ios-simulator:
+    name: Build iOS Simulator (.app) — Unsigned
+    max_build_duration: 120
+    environment:
+      vars:
+        XCODE_WORKSPACE: "Loggyx.xcworkspace"
+        XCODE_SCHEME: "Loggyx"
+        CONFIGURATION: "Debug"
+        DERIVED_DATA_PATH: "$CM_BUILD_DIR/build"
+    triggering:
+      events:
+        - push
+        - pull_request
+    scripts:
+      # Install Ruby bundler if using fastlane (optional)
+      - name: Install bundler (optional)
+        script: |
+          gem install bundler -v "~>2" || true
+
+      # Install CocoaPods if Podfile exists
+      - name: Install CocoaPods (if needed)
+        script: |
+          if [ -f "${CM_BUILD_DIR}/ios/Podfile" ]; then
+            sudo gem install cocoapods -v '>= 1.11' --no-document || true
+            cd ios
+            pod install --repo-update
+            cd ..
+          fi
+
+      # Clean and build for iphonesimulator (no signing)
+      - name: Build for iOS Simulator
+        script: |
+          set -e
+          echo "Derived data: ${DERIVED_DATA_PATH}"
+          xcodebuild clean -workspace "${XCODE_WORKSPACE}" -scheme "${XCODE_SCHEME}" -configuration "${CONFIGURATION}" -sdk iphonesimulator -derivedDataPath "${DERIVED_DATA_PATH}"
+          xcodebuild build -workspace "${XCODE_WORKSPACE}" -scheme "${XCODE_SCHEME}" -configuration "${CONFIGURATION}" -sdk iphonesimulator -derivedDataPath "${DERIVED_DATA_PATH}" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+
+      # Locate .app and zip it
+      - name: Package .app for Appetize
+        script: |
+          set -e
+          APP_DIR="$(find ${DERIVED_DATA_PATH} -type d -name \"${XCODE_SCHEME}.app\" | head -n 1)"
+          if [ -z "$APP_DIR" ]; then
+            echo "ERROR: .app not found in derived data"
+            ls -R "${DERIVED_DATA_PATH}"
+            exit 1
+          fi
+          echo "Found app: $APP_DIR"
+          ZIP_NAME="${XCODE_SCHEME}-simulator.zip"
+          cd "$(dirname "$APP_DIR")"
+          zip -r "${CM_BUILD_DIR}/${ZIP_NAME}" "$(basename "$APP_DIR")"
+          echo "Packaged: ${CM_BUILD_DIR}/${ZIP_NAME}"
+    artifacts:
+      - build/**/${XCODE_SCHEME}-simulator.zip
+    publishing:
+      - name: Upload artifacts (built zip)
+        script: |
+          echo "Artifacts available at build artifacts in Codemagic UI"
