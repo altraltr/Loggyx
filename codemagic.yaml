@@ -53,7 +53,3 @@ workflows:
           echo "Packaged: ${CM_BUILD_DIR}/${ZIP_NAME}"
     artifacts:
       - build/**/${XCODE_SCHEME}-simulator.zip
-    publishing:
-      - name: Upload artifacts (built zip)
-        script: |
-          echo "Artifacts available at build artifacts in Codemagic UI"
