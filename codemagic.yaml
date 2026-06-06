@@ -4,8 +4,8 @@ workflows:
     max_build_duration: 120
     environment:
       vars:
-        XCODE_WORKSPACE: "Loggyx.xcworkspace"
-        XCODE_SCHEME: "Loggyx"
+        XCODE_WORKSPACE: "Loggy.xcworkspace"
+        XCODE_SCHEME: "Loggy"
         CONFIGURATION: "Debug"
         DERIVED_DATA_PATH: "$CM_BUILD_DIR/build"
     triggering:
